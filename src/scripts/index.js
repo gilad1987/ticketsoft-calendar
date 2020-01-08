@@ -71,7 +71,7 @@ class TicketSoftCalendar {
         endTime: "18:00"
       },
       header: {
-        left: "prev,next today datepicker",
+        left: "next,prev today datepicker",
         center: "title",
         right: "dayGridMonth,timeGridWeek,timeGridDay"
       },
@@ -80,6 +80,9 @@ class TicketSoftCalendar {
           text: "Datepicker",
           click: function() {}
         }
+      },
+      eventClick: event => {
+        console.log(event.event.extendedProps);
       },
       dateClick: info => {
         if ("dayGridMonth" === this.calendar.view.type) {
@@ -141,7 +144,7 @@ class TicketSoftCalendar {
       opt.innerText = options[i].text;
       select.appendChild(opt);
     }
-    
+
     document.querySelector(".fc-right").appendChild(select);
     // const filterEventsElm = document.getElementById("filterEvents");
     // const todayElm = document.getElementById("today");
@@ -150,8 +153,6 @@ class TicketSoftCalendar {
     // const dayGridMonthElm = document.getElementById("dayGridMonth");
     // const timeGridWeekElm = document.getElementById("timeGridWeek");
     // const timeGridDayElm = document.getElementById("timeGridDay");
-
-
 
     // todayElm.addEventListener("click", () => {
     //   this.calendar.today();
@@ -186,145 +187,217 @@ document.addEventListener("DOMContentLoaded", function() {
       title: "event 1",
       start: "2020-01-01 10:45:00",
       end: "2020-01-01 12:45:00",
-      type: "room1"
+      type: "room1",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 2",
       start: "2020-01-01 10:45:00",
       end: "2020-01-01 12:45:00",
-      type: "room1"
+      type: "room1",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 3",
       start: "2020-01-01 10:45:00",
       end: "2020-01-01 12:45:00",
-      type: "room2"
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 4",
       start: "2020-01-01 15:45:00",
       end: "2020-01-01 19:45:00",
-      type: "room2"
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 5",
       start: "2020-01-01 10:45:00",
       end: "2020-01-01 12:45:00",
-      type: "room2"
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 6",
       start: "2020-01-01 10:45:00",
       end: "2020-01-01 15:45:00",
-      type: "room2"
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 7",
       start: "2020-01-01 10:00:00",
       end: "2020-01-01 12:45:00",
-      type: "room3"
+      type: "room3",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 8",
       start: "2020-01-01 09:45:00",
       end: "2020-01-01 18:45:00",
-      type: "room3"
+      type: "room3",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 9",
       start: "2020-01-13 10:00:00",
       end: "2020-01-13 15:45:00",
-      type: "room4"
+      type: "room4",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 10",
       start: "2020-01-13 10:00:00",
       end: "2020-01-13 12:45:00",
-      type: "room5"
+      type: "room5",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 11",
       start: "2020-01-13 10:10:00",
       end: "2020-01-13 18:45:00",
-      type: "room6"
+      type: "room6",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 5",
       start: "2020-01-06 10:45:00",
       end: "2020-01-01 12:45:00",
-      type: "room2"
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 6",
       start: "2020-01-06 10:45:00",
       end: "2020-01-06 15:45:00",
-      type: "room2"
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 7",
       start: "2020-01-06 10:00:00",
       end: "2020-01-06 12:45:00",
-      type: "room3"
+      type: "room3",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 8",
       start: "2020-01-04 09:45:00",
       end: "2020-01-04 18:45:00",
-      type: "room3"
+      type: "room3",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 10",
       start: "2020-01-13 10:00:00",
       end: "2020-01-13 12:45:00",
-      type: "room5"
+      type: "room5",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 11",
       start: "2020-01-20 10:10:00",
       end: "2020-01-20 18:45:00",
-      type: "room6"
+      type: "room6",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 5",
       start: "2020-01-20 10:45:00",
       end: "2020-01-20 12:45:00",
-      type: "room2"
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 6",
       start: "2020-01-20 10:45:00",
       end: "2020-01-20 15:45:00",
-      type: "room2"
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 7",
       start: "2020-01-20 10:00:00",
       end: "2020-01-20 12:45:00",
-      type: "room3"
+      type: "room3",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 123123",
       start: "2020-01-21 09:45:00",
       end: "2020-01-21 18:45:00",
-      type: "room3"
+      type: "room3",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 11",
       start: "2020-01-16 10:10:00",
       end: "2020-01-16 18:45:00",
-      type: "room6"
+      type: "room6",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 5",
       start: "2020-01-16 10:45:00",
       end: "2020-01-16 12:45:00",
-      type: "room2"
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
     },
     {
       title: "event 6",
       start: "2020-01-16 10:45:00",
       end: "2020-01-16 15:45:00",
-      type: "room2"
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
     }
   ];
   iTicketSoftCalendar.updateEvents(events);
