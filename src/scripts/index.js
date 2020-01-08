@@ -27,7 +27,10 @@ class TicketSoftCalendar {
   };
 
   filterEvents = filterValue => {
-    const events = this.events.filter(event => event.type === filterValue);
+    const events =
+      filterValue === "All"
+        ? this.events
+        : this.events.filter(event => event.type === filterValue);
     this.renderEvents(events);
   };
 
