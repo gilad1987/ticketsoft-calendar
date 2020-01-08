@@ -18,7 +18,7 @@ class TicketSoftCalendar {
   constructor() {
     this.render();
     this.renderDatePicker();
-    this.attachButtonsEvent();
+    this.appendFilterSelectButton();
   }
   updateEvents = events => {
     this.events = events;
@@ -70,17 +70,17 @@ class TicketSoftCalendar {
         startTime: "10:00",
         endTime: "18:00"
       },
-      // header: {
-      //   left: "prev,next today datepicker",
-      //   center: "title",
-      //   right: "dayGridMonth,timeGridWeek,timeGridDay"
-      // },
-      // customButtons: {
-      //   datepicker: {
-      //     text: "Datepicker",
-      //     click: function() {}
-      //   }
-      // },
+      header: {
+        left: "prev,next today datepicker",
+        center: "title",
+        right: "dayGridMonth,timeGridWeek,timeGridDay"
+      },
+      customButtons: {
+        datepicker: {
+          text: "Datepicker",
+          click: function() {}
+        }
+      },
       dateClick: info => {
         if ("dayGridMonth" === this.calendar.view.type) {
           this.calendar.changeView("timeGridWeek", info.dateStr);
@@ -99,43 +99,83 @@ class TicketSoftCalendar {
     this.calendar.render();
   };
 
-  attachButtonsEvent = () => {
-    const filterEventsElm = document.getElementById("filterEvents");
-    const todayElm = document.getElementById("today");
-    const nextElm = document.getElementById("next");
-    const prevElm = document.getElementById("prev");
-    const dayGridMonthElm = document.getElementById("dayGridMonth");
-    const timeGridWeekElm = document.getElementById("timeGridWeek");
-    const timeGridDayElm = document.getElementById("timeGridDay");
-
-    filterEventsElm.addEventListener("change", event => {
+  appendFilterSelectButton = () => {
+    const select = document.createElement("select");
+    select.addEventListener("change", event => {
       const filterValue = event.target.value;
       this.filterEvents(filterValue);
     });
+    const options = [
+      {
+        value: "All",
+        text: "All"
+      },
+      {
+        text: "room1",
+        text: "room 1"
+      },
+      {
+        value: "room2",
+        text: "room 2"
+      },
+      {
+        value: "room3",
+        text: "room 3"
+      },
+      {
+        value: "room4",
+        text: "room 4"
+      },
+      {
+        value: "room5",
+        text: "room 5"
+      },
+      {
+        value: "room6",
+        text: "room 6"
+      }
+    ];
+    for (var i = 0; i < options.length; i++) {
+      var opt = document.createElement("option");
+      opt.value = options[i].value;
+      opt.innerText = options[i].text;
+      select.appendChild(opt);
+    }
+    
+    document.querySelector(".fc-right").appendChild(select);
+    // const filterEventsElm = document.getElementById("filterEvents");
+    // const todayElm = document.getElementById("today");
+    // const nextElm = document.getElementById("next");
+    // const prevElm = document.getElementById("prev");
+    // const dayGridMonthElm = document.getElementById("dayGridMonth");
+    // const timeGridWeekElm = document.getElementById("timeGridWeek");
+    // const timeGridDayElm = document.getElementById("timeGridDay");
 
-    todayElm.addEventListener("click", () => {
-      this.calendar.today();
-    });
 
-    nextElm.addEventListener("click", () => {
-      this.calendar.next();
-    });
 
-    prevElm.addEventListener("click", () => {
-      this.calendar.prev();
-    });
+    // todayElm.addEventListener("click", () => {
+    //   this.calendar.today();
+    // });
 
-    dayGridMonthElm.addEventListener("click", () => {
-      this.calendar.changeView("dayGridMonth");
-    });
+    // nextElm.addEventListener("click", () => {
+    //   this.calendar.next();
+    // });
 
-    timeGridWeekElm.addEventListener("click", () => {
-      this.calendar.changeView("timeGridWeek");
-    });
+    // prevElm.addEventListener("click", () => {
+    //   this.calendar.prev();
+    // });
 
-    timeGridDayElm.addEventListener("click", () => {
-      this.calendar.changeView("timeGridDay");
-    });
+    // dayGridMonthElm.addEventListener("click", () => {
+    //   this.calendar.changeView("dayGridMonth");
+    // });
+
+    // timeGridWeekElm.addEventListener("click", () => {
+    //   this.calendar.changeView("timeGridWeek");
+    // });
+
+    // timeGridDayElm.addEventListener("click", () => {
+    //   this.calendar.changeView("timeGridDay");
+    // });
   };
 }
 
