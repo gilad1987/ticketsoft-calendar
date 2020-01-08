@@ -19,6 +19,7 @@ class TicketSoftCalendar {
     this.render();
     this.renderDatePicker();
     this.appendFilterSelectButton();
+    this.attachEventCloseModalButton();
   }
   updateEvents = events => {
     this.events = events;
@@ -56,6 +57,16 @@ class TicketSoftCalendar {
     });
   };
 
+  openModal = event => {
+    const modalElm = document.getElementById("modal");
+    modalElm.classList.add("open");
+  };
+
+  closeModal = event => {
+    const modalElm = document.getElementById("modal");
+    modalElm.classList.remove("open");
+  };
+
   render = () => {
     const calendarEl = document.getElementById("calendar");
     this.calendar = new Calendar(calendarEl, {
@@ -82,7 +93,7 @@ class TicketSoftCalendar {
         }
       },
       eventClick: event => {
-        console.log(event.event.extendedProps);
+        this.openModal(event);
       },
       dateClick: info => {
         if ("dayGridMonth" === this.calendar.view.type) {
@@ -100,6 +111,13 @@ class TicketSoftCalendar {
     });
 
     this.calendar.render();
+  };
+
+  attachEventCloseModalButton = () => {
+    const closeModalButtonElm = document.getElementById('close-modal-button');
+    closeModalButtonElm.addEventListener('click',()=>{
+      modal.classList.remove('open');
+    });
   };
 
   appendFilterSelectButton = () => {
