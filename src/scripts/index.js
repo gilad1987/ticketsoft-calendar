@@ -198,12 +198,8 @@ class TicketSoftCalendar {
         }
       },
       select: info => {
-        console.log(info);
       },
       datesRender: info => {
-        // console.log(info.view.name);
-        // console.log(info.view.currentStart);
-        // console.log(info.view.currentEnd);
 
         const currentStart = info.view.currentStart;
         const currentEnd = info.view.currentEnd;
@@ -217,10 +213,7 @@ class TicketSoftCalendar {
           info.el.parentNode.insertBefore(messageElm, info.el);
         }
 
-        console.log(this.messages);
         this.messages.forEach(message => {
-          console.log(message,currentStart <= message.startTime &&
-            currentEnd >= message.endTime)
           if (
             currentStart <= message.startTime &&
             currentEnd >= message.endTime
