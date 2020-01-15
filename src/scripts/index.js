@@ -1,4 +1,4 @@
-import { Calendar } from "@fullcalendar/core";
+import { Calendar, DateEnv } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
@@ -14,6 +14,42 @@ import "@fullcalendar/list/main.css";
 class TicketSoftCalendar {
   iCalendar;
   events = [];
+
+  /**
+   * Display messages before calendar view by range dates
+   */
+  messages = [
+    {
+      startTime: new Date("2020-01-01"),
+      endTime: new Date("2020-01-01"),
+      text: "message for days between - 2020-01-01 - 2020-01-01",
+      displayInViewTypes: [""]
+    },
+    {
+      startTime: new Date("2020-01-01"),
+      endTime: new Date("2020-01-01"),
+      text: "message for days between - 2020-01-01 - 2020-01-01",
+      displayInViewTypes: [""]
+    },
+    {
+      startTime: new Date("2020-01-14"),
+      endTime: new Date("2020-01-14"),
+      text: "message for days between - 2020-01-14 - 2020-01-14",
+      displayInViewTypes: [""]
+    },
+    {
+      startTime: new Date("2020-01-22"),
+      endTime: new Date("2020-01-22"),
+      text: "message for days between - 2020-01-22 - 2020-01-22",
+      displayInViewTypes: [""]
+    },
+    {
+      startTime: new Date("2020-01-20"),
+      endTime: new Date("2020-01-20"),
+      text: "message for days between - 2020-01-20 - 2020-01-20",
+      displayInViewTypes: [""]
+    }
+  ];
 
   constructor() {
     this.render();
@@ -53,6 +89,34 @@ class TicketSoftCalendar {
       onSelect: dateString => {
         picker.gotoDate(new Date(dateString));
         this.calendar.gotoDate(new Date(dateString));
+      },
+      i18n: {
+        previousMonth: "Mes anterior",
+        nextMonth: "Mes siguiente",
+        months: [
+          "ינואר",
+          "פבואר",
+          "מרץ",
+          "אפריל",
+          "מאי",
+          "יוני",
+          "יולי",
+          "אוגוסט",
+          "ספטמבר",
+          "אוקוטובר",
+          "נובמבר",
+          "דצמבר"
+        ],
+        weekdays: ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"],
+        weekdaysShort: [
+          "ראשון",
+          "שני",
+          "שלישי",
+          "רביעי",
+          "חמישי",
+          "שישי",
+          "שבת"
+        ]
       }
     });
   };
@@ -70,6 +134,7 @@ class TicketSoftCalendar {
   render = () => {
     const calendarEl = document.getElementById("calendar");
     this.calendar = new Calendar(calendarEl, {
+      nowIndicator: true,
       dir: "rtl",
       locale: "he",
       header: false,
@@ -86,10 +151,34 @@ class TicketSoftCalendar {
         center: "title",
         right: "dayGridMonth,timeGridWeek,timeGridDay"
       },
+      buttonText: {
+        today: "היום",
+        month: "חודש",
+        week: "שבוע",
+        day: "יום"
+      },
       customButtons: {
         datepicker: {
-          text: "Datepicker",
+          text: "לוח שנה",
           click: function() {}
+        }
+      },
+      views: {
+        week: {
+          titleFormat: {
+            month: "short",
+            year: "numeric",
+            day: "numeric",
+            weekday: "short"
+          }
+        },
+        day: {
+          titleFormat: {
+            month: "short",
+            year: "numeric",
+            day: "numeric",
+            weekday: "short"
+          }
         }
       },
       eventClick: event => {
@@ -107,6 +196,40 @@ class TicketSoftCalendar {
           this.calendar.gotoDate(info.dateStr);
           return;
         }
+      },
+      select: info => {
+        console.log(info);
+      },
+      datesRender: info => {
+        // console.log(info.view.name);
+        // console.log(info.view.currentStart);
+        // console.log(info.view.currentEnd);
+
+        const currentStart = info.view.currentStart;
+        const currentEnd = info.view.currentEnd;
+        let messageElm = document.getElementById("messages");
+
+        if (messageElm) {
+          messageElm.innerHTML = "";
+        } else {
+          messageElm = document.createElement("ul");
+          messageElm.setAttribute("id", "messages");
+          info.el.parentNode.insertBefore(messageElm, info.el);
+        }
+
+        console.log(this.messages);
+        this.messages.forEach(message => {
+          console.log(message,currentStart <= message.startTime &&
+            currentEnd >= message.endTime)
+          if (
+            currentStart <= message.startTime &&
+            currentEnd >= message.endTime
+          ) {
+            const li = document.createElement("li");
+            li.innerHTML = message.text;
+            messageElm.appendChild(li);
+          }
+        });
       }
     });
 
@@ -114,9 +237,9 @@ class TicketSoftCalendar {
   };
 
   attachEventCloseModalButton = () => {
-    const closeModalButtonElm = document.getElementById('close-modal-button');
-    closeModalButtonElm.addEventListener('click',()=>{
-      modal.classList.remove('open');
+    const closeModalButtonElm = document.getElementById("close-modal-button");
+    closeModalButtonElm.addEventListener("click", () => {
+      modal.classList.remove("open");
     });
   };
 
@@ -412,6 +535,60 @@ document.addEventListener("DOMContentLoaded", function() {
       title: "event 6",
       start: "2020-01-16 10:45:00",
       end: "2020-01-16 15:45:00",
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
+    },
+    {
+      title: "event 6",
+      start: "2020-01-28 10:45:00",
+      end: "2020-01-28 15:45:00",
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
+    },
+    {
+      title: "event 6",
+      start: "2020-01-28 10:45:00",
+      end: "2020-01-28 15:45:00",
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
+    },
+    {
+      title: "event 6",
+      start: "2020-01-28 10:45:00",
+      end: "2020-01-28 15:45:00",
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
+    },
+    {
+      title: "event 6",
+      start: "2020-01-28 10:45:00",
+      end: "2020-01-28 15:45:00",
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
+    },
+    {
+      title: "event 6",
+      start: "2020-01-28 10:45:00",
+      end: "2020-01-28 15:45:00",
+      type: "room2",
+      extendedProps: {
+        type: "room3"
+      }
+    },
+    {
+      title: "event 6",
+      start: "2020-01-28 10:45:00",
+      end: "2020-01-28 15:45:00",
       type: "room2",
       extendedProps: {
         type: "room3"
