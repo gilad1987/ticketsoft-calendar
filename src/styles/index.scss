@@ -66,3 +66,9 @@ body {
   background: #d3d3d3 !important;
   color: #2d3e50 !important;
 }
+
+ul {
+  direction: rtl;
+  list-style: decimal;
+  text-align: right;
+}
