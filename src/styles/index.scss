@@ -72,3 +72,23 @@ ul {
   list-style: decimal;
   text-align: right;
 }
+
+.wrapperColumns {
+  position: absolute;
+  top: 0;
+  right: 57px;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  .column {
+    flex: 1;
+    border-right: 1px solid #000;
+    position: relative;
+  }
+}
+
+.column .fc-event{
+  width: 100% !important;
+  left: 0 !important;
+  margin: 0 !important;
+}

@@ -1,4 +1,4 @@
-import { Calendar, DateEnv } from "@fullcalendar/core";
+import { Calendar, DateEnv, debounce } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
@@ -11,9 +11,30 @@ import "@fullcalendar/core/main.css";
 import "@fullcalendar/daygrid/main.css";
 import "@fullcalendar/timegrid/main.css";
 import "@fullcalendar/list/main.css";
+
+var moment = require("moment");
 class TicketSoftCalendar {
   iCalendar;
+  selectedEventType = 1;
+
   events = [];
+  eventsGroupByType = {
+    2: {
+      type: 2,
+      text: "חללים",
+      options: {}
+    },
+    3: {
+      type: 3,
+      text: "מדריכים",
+      options: {}
+    },
+    1: {
+      type: 1,
+      text: "פעילות",
+      options: {}
+    }
+  };
 
   /**
    * Display messages before calendar view by range dates
@@ -22,40 +43,37 @@ class TicketSoftCalendar {
     {
       startTime: new Date("2020-01-01"),
       endTime: new Date("2020-01-01"),
-      text: "message for days between - 2020-01-01 - 2020-01-01",
-      displayInViewTypes: [""]
+      text: "message for days between - 2020-01-01 - 2020-01-01"
     },
     {
       startTime: new Date("2020-01-01"),
       endTime: new Date("2020-01-01"),
-      text: "message for days between - 2020-01-01 - 2020-01-01",
-      displayInViewTypes: [""]
+      text: "message for days between - 2020-01-01 - 2020-01-01"
     },
     {
       startTime: new Date("2020-01-14"),
       endTime: new Date("2020-01-14"),
-      text: "message for days between - 2020-01-14 - 2020-01-14",
-      displayInViewTypes: [""]
+      text: "message for days between - 2020-01-14 - 2020-01-14"
     },
     {
       startTime: new Date("2020-01-22"),
       endTime: new Date("2020-01-22"),
-      text: "message for days between - 2020-01-22 - 2020-01-22",
-      displayInViewTypes: [""]
+      text: "message for days between - 2020-01-22 - 2020-01-22"
     },
     {
       startTime: new Date("2020-01-20"),
       endTime: new Date("2020-01-20"),
-      text: "message for days between - 2020-01-20 - 2020-01-20",
-      displayInViewTypes: [""]
+      text: "message for days between - 2020-01-20 - 2020-01-20"
     }
   ];
 
   constructor() {
     this.render();
     this.renderDatePicker();
-    this.appendFilterSelectButton();
+    // this.appendFilterSelectButton();
     this.attachEventCloseModalButton();
+    this.generateData();
+    this.filterEvents(1,'All')
   }
   updateEvents = events => {
     this.events = events;
@@ -63,12 +81,19 @@ class TicketSoftCalendar {
     this.renderEvents(events);
   };
 
-  filterEvents = filterValue => {
+  filterEvents = (filterKey, filterValue) => {
     const events =
       filterValue === "All"
-        ? this.events
-        : this.events.filter(event => event.type === filterValue);
+        ? this.events.filter(
+            _event => _event.extendedProps.type_id === this.selectedEventType
+          )
+        : this.events.filter(
+          _event => _event.extendedProps.type_id === this.selectedEventType
+        ).filter(
+            _event => _event.extendedProps[filterKey] === Number(filterValue)
+          );
     this.renderEvents(events);
+    return events;
   };
 
   renderEvents = events => {
@@ -131,9 +156,107 @@ class TicketSoftCalendar {
     modalElm.classList.remove("open");
   };
 
+  clearTypeFilterButtonsSelection = () => {
+    const buttons = Array.prototype.slice.call(
+      document.querySelectorAll('[class*="Select-button"]')
+    );
+    buttons.forEach(button => button.classList.remove("fc-button-active"));
+  };
+
+  setSelectedFilterTypeButton = elem => {
+    elem.classList.add("fc-button-active");
+  };
+
+  dayRender = () => {
+    if (this.calendar.view.type !== "timeGridDay") {
+      return;
+    }
+
+    const wrapperElm = document.querySelector(".fc-slats");
+    const wrapperColumns = document.createElement("div");
+    wrapperColumns.classList.add("wrapperColumns");
+
+    if (document.querySelector(".wrapperColumns")) {
+      document.querySelector(".wrapperColumns").remove();
+    }
+
+    const entries = Object.entries(
+      this.eventsGroupByType[this.selectedEventType].options
+    );
+    for (const [id, value] of entries) {
+      const column = document.createElement("div");
+      column.id = `${this.getCurrentType()}_${id}`;
+      column.classList.add("column");
+      column.innerText = value;
+      wrapperColumns.appendChild(column);
+    }
+    wrapperElm.appendChild(wrapperColumns);
+  };
+
+  getDateDiff = (start, end) => {
+    var diffMs = end - start; // milliseconds between now & Christmas
+    var diffDays = Math.floor(diffMs / 86400000); // days
+    var diffHrs = Math.floor((diffMs % 86400000) / 3600000); // hours
+    var diffMins = Math.round(((diffMs % 86400000) % 3600000) / 60000); // minutes
+    return {
+      diffDays,
+      diffHrs,
+      diffMins
+    };
+  };
+
+  moveEventToColumn = ({
+    el,
+    activity_id,
+    guide_id,
+    room_id,
+    type_id,
+    event
+  }) => {
+    const currentId =
+      this.selectedEventType === 1
+        ? activity_id
+        : this.selectedEventType === 2
+        ? room_id
+        : guide_id;
+
+    const column = document.querySelector(
+      `#${this.getCurrentType()}_${currentId}.column`
+    );
+
+    if (column) {
+      //const dateDiff = this.getDateDiff(event.start,event.end);
+      const diff = Math.abs(event.end- event.start);
+      const minutes = Math.floor((diff/1000)/60);
+      const minuteHeight = column.clientHeight/(24*60);
+      el.style.height = `${minuteHeight*minutes}px`;
+      column.appendChild(el);
+    }
+    // const entries = Object.entries(
+    //   this.eventsGroupByType[this.selectedEventType].options
+    // );
+    // for (const [id, value] of entries) {
+    //   const eventElm = document.querySelector(`.type_id_${id}`);
+    //   if(!eventElm){
+    //     continue;
+    //   }
+    //   const column = document.querySelector(`#column_${id}.column`);
+    //   column.appendChild(eventElm);
+    // }
+  };
+
+  getCurrentType = () => {
+    return this.selectedEventType === 1
+      ? "activity"
+      : this.selectedEventType === 2
+      ? "room"
+      : "guide";
+  };
+
   render = () => {
     const calendarEl = document.getElementById("calendar");
     this.calendar = new Calendar(calendarEl, {
+      eventPositioned: function(info) {},
       nowIndicator: true,
       dir: "rtl",
       locale: "he",
@@ -149,7 +272,8 @@ class TicketSoftCalendar {
       header: {
         left: "next,prev today datepicker",
         center: "title",
-        right: "dayGridMonth,timeGridWeek,timeGridDay"
+        right:
+          "dayGridMonth,timeGridWeek,timeGridDay activitySelect,guideSelect,roomSelect"
       },
       buttonText: {
         today: "היום",
@@ -160,7 +284,40 @@ class TicketSoftCalendar {
       customButtons: {
         datepicker: {
           text: "לוח שנה",
-          click: function() {}
+          click: event => {}
+        },
+        activitySelect: {
+          text: "פעילות",
+          click: event => {
+            this.clearTypeFilterButtonsSelection();
+            this.setSelectedFilterTypeButton(event.target);
+            this.selectedEventType = 1;
+            this.filterEvents("type", "All");
+            this.appendFilterSelectButton();
+            this.dayRender();
+          }
+        },
+        guideSelect: {
+          text: "מדריכים",
+          click: event => {
+            this.clearTypeFilterButtonsSelection();
+            this.setSelectedFilterTypeButton(event.target);
+            this.selectedEventType = 3;
+            this.filterEvents("type", "All");
+            this.appendFilterSelectButton();
+            this.dayRender();
+          }
+        },
+        roomSelect: {
+          text: "חללים",
+          click: event => {
+            this.clearTypeFilterButtonsSelection();
+            this.setSelectedFilterTypeButton(event.target);
+            this.selectedEventType = 2;
+            this.filterEvents("type", "All");
+            this.appendFilterSelectButton();
+            this.dayRender();
+          }
         }
       },
       views: {
@@ -182,6 +339,7 @@ class TicketSoftCalendar {
         }
       },
       eventClick: event => {
+        console.log('eventClick');
         this.openModal(event);
       },
       dateClick: info => {
@@ -197,10 +355,11 @@ class TicketSoftCalendar {
           return;
         }
       },
-      select: info => {
+      select: info => {},
+      dayRender: dayRenderInfo => {
+        this.dayRender(dayRenderInfo);
       },
       datesRender: info => {
-
         const currentStart = info.view.currentStart;
         const currentEnd = info.view.currentEnd;
         let messageElm = document.getElementById("messages");
@@ -223,6 +382,24 @@ class TicketSoftCalendar {
             messageElm.appendChild(li);
           }
         });
+      },
+      eventRender: ({ el, event }) => {
+        if (this.calendar.view.type !== "timeGridDay") {
+          return;
+        }
+        console.log(event);
+        const classes = [
+          `activity_id_${event.extendedProps.activity_id}`,
+          `guide_id_${event.extendedProps.guide_id}`,
+          `room_id_${event.extendedProps.room_id}`,
+          `type_id_${event.extendedProps.type_id}`
+        ];
+        el.classList.add(...classes);
+
+        setTimeout(
+          () => this.moveEventToColumn({ el, event, ...event.extendedProps }),
+          0
+        );
       }
     });
 
@@ -236,47 +413,99 @@ class TicketSoftCalendar {
     });
   };
 
+  generateData = () => {
+    const countEventToGenerate = 500;
+    const events = [];
+
+    function randomDate(start, end) {
+      return new Date(
+        start.getTime() + Math.random() * (end.getTime() - start.getTime())
+      );
+    }
+
+    function randomNumber(min, max) {
+      return Math.floor(Math.random() * max) + min;
+    }
+
+    for (let i = 0; i < countEventToGenerate; i++) {
+      let start = moment(
+        randomDate(new Date(2020, 0, 1), new Date(2020, 1, 30))
+      ).hours(randomNumber(8, 12));
+      let end = moment(start).add(randomNumber(1, 4), "hours");
+
+      start = start.toDate();
+      end = end.toDate();
+
+      const activity_id = randomNumber(0, 10);
+      const guide_id = randomNumber(0, 10);
+      const room_id = randomNumber(0, 10);
+      const type_id = randomNumber(1, 3);
+
+      if (
+        type_id === 1 &&
+        !this.eventsGroupByType[type_id].options[activity_id]
+      ) {
+        this.eventsGroupByType[type_id].options[
+          activity_id
+        ] = `label activity_id: ${activity_id} `;
+      }
+      if (type_id === 2 && !this.eventsGroupByType[type_id].options[room_id]) {
+        this.eventsGroupByType[type_id].options[
+          room_id
+        ] = `label room_id: ${room_id} `;
+      }
+      if (type_id === 3 && !this.eventsGroupByType[type_id].options[guide_id]) {
+        this.eventsGroupByType[type_id].options[
+          guide_id
+        ] = `label guide_id: ${guide_id} `;
+      }
+      events.push({
+        start,
+        end,
+        extendedProps: {
+          activity_id,
+          guide_id,
+          room_id,
+          type_id
+        },
+        title: `Event ${i} - activity_id:${activity_id}, guide_id:${guide_id}, room_id:${room_id}, type_id:${type_id}`
+
+        // backgroundColor:`#${activity_id}${guide_id}${room_id}`,
+        // borderColor:`#${activity_id}${guide_id}${room_id}`,
+      });
+    }
+    this.updateEvents(events);
+  };
   appendFilterSelectButton = () => {
     const select = document.createElement("select");
     select.addEventListener("change", event => {
       const filterValue = event.target.value;
-      this.filterEvents(filterValue);
+      const filterKey =
+        this.selectedEventType === 1
+          ? "activity_id"
+          : this.selectedEventType === 2
+          ? "room_id"
+          : "guide_id";
+      this.filterEvents(filterKey, filterValue);
     });
-    const options = [
-      {
-        value: "All",
-        text: "All"
-      },
-      {
-        text: "room1",
-        text: "room 1"
-      },
-      {
-        value: "room2",
-        text: "room 2"
-      },
-      {
-        value: "room3",
-        text: "room 3"
-      },
-      {
-        value: "room4",
-        text: "room 4"
-      },
-      {
-        value: "room5",
-        text: "room 5"
-      },
-      {
-        value: "room6",
-        text: "room 6"
-      }
-    ];
-    for (var i = 0; i < options.length; i++) {
-      var opt = document.createElement("option");
-      opt.value = options[i].value;
-      opt.innerText = options[i].text;
+
+    const opt = document.createElement("option");
+    opt.value = "All";
+    opt.innerText = "All";
+    select.appendChild(opt);
+
+    const entries = Object.entries(
+      this.eventsGroupByType[this.selectedEventType].options
+    );
+    for (const [id, value] of entries) {
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.innerText = value;
       select.appendChild(opt);
+    }
+
+    if (document.querySelector(".fc-right select")) {
+      document.querySelector(".fc-right select").remove();
     }
 
     document.querySelector(".fc-right").appendChild(select);
@@ -316,279 +545,8 @@ class TicketSoftCalendar {
 
 document.addEventListener("DOMContentLoaded", function() {
   const iTicketSoftCalendar = new TicketSoftCalendar();
-  const events = [
-    {
-      title: "event 1",
-      start: "2020-01-01 10:45:00",
-      end: "2020-01-01 12:45:00",
-      type: "room1",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 2",
-      start: "2020-01-01 10:45:00",
-      end: "2020-01-01 12:45:00",
-      type: "room1",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 3",
-      start: "2020-01-01 10:45:00",
-      end: "2020-01-01 12:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 4",
-      start: "2020-01-01 15:45:00",
-      end: "2020-01-01 19:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 5",
-      start: "2020-01-01 10:45:00",
-      end: "2020-01-01 12:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 6",
-      start: "2020-01-01 10:45:00",
-      end: "2020-01-01 15:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 7",
-      start: "2020-01-01 10:00:00",
-      end: "2020-01-01 12:45:00",
-      type: "room3",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 8",
-      start: "2020-01-01 09:45:00",
-      end: "2020-01-01 18:45:00",
-      type: "room3",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 9",
-      start: "2020-01-13 10:00:00",
-      end: "2020-01-13 15:45:00",
-      type: "room4",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 10",
-      start: "2020-01-13 10:00:00",
-      end: "2020-01-13 12:45:00",
-      type: "room5",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 11",
-      start: "2020-01-13 10:10:00",
-      end: "2020-01-13 18:45:00",
-      type: "room6",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 5",
-      start: "2020-01-06 10:45:00",
-      end: "2020-01-01 12:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 6",
-      start: "2020-01-06 10:45:00",
-      end: "2020-01-06 15:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 7",
-      start: "2020-01-06 10:00:00",
-      end: "2020-01-06 12:45:00",
-      type: "room3",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 8",
-      start: "2020-01-04 09:45:00",
-      end: "2020-01-04 18:45:00",
-      type: "room3",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 10",
-      start: "2020-01-13 10:00:00",
-      end: "2020-01-13 12:45:00",
-      type: "room5",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 11",
-      start: "2020-01-20 10:10:00",
-      end: "2020-01-20 18:45:00",
-      type: "room6",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 5",
-      start: "2020-01-20 10:45:00",
-      end: "2020-01-20 12:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 6",
-      start: "2020-01-20 10:45:00",
-      end: "2020-01-20 15:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 7",
-      start: "2020-01-20 10:00:00",
-      end: "2020-01-20 12:45:00",
-      type: "room3",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 123123",
-      start: "2020-01-21 09:45:00",
-      end: "2020-01-21 18:45:00",
-      type: "room3",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 11",
-      start: "2020-01-16 10:10:00",
-      end: "2020-01-16 18:45:00",
-      type: "room6",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 5",
-      start: "2020-01-16 10:45:00",
-      end: "2020-01-16 12:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 6",
-      start: "2020-01-16 10:45:00",
-      end: "2020-01-16 15:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 6",
-      start: "2020-01-28 10:45:00",
-      end: "2020-01-28 15:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 6",
-      start: "2020-01-28 10:45:00",
-      end: "2020-01-28 15:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 6",
-      start: "2020-01-28 10:45:00",
-      end: "2020-01-28 15:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 6",
-      start: "2020-01-28 10:45:00",
-      end: "2020-01-28 15:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 6",
-      start: "2020-01-28 10:45:00",
-      end: "2020-01-28 15:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    },
-    {
-      title: "event 6",
-      start: "2020-01-28 10:45:00",
-      end: "2020-01-28 15:45:00",
-      type: "room2",
-      extendedProps: {
-        type: "room3"
-      }
-    }
-  ];
-  iTicketSoftCalendar.updateEvents(events);
+
+  //iTicketSoftCalendar.updateEvents(generateData());
   // setTimeout(() => {
   //   var eventSources = calendar.getEventSources();
   //   eventSources.every(eventSource => eventSource.remove());
