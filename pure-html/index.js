@@ -1,18 +1,3 @@
-import { Calendar, DateEnv, debounce } from "@fullcalendar/core";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import listPlugin from "@fullcalendar/list";
-import interactionPlugin from "@fullcalendar/interaction";
-import Pikaday from "Pikaday";
-
-import "../styles/index.css";
-import "../styles/index.scss";
-import "@fullcalendar/core/main.css";
-import "@fullcalendar/daygrid/main.css";
-import "@fullcalendar/timegrid/main.css";
-import "@fullcalendar/list/main.css";
-
-var moment = require("moment");
 class TicketSoftCalendar {
   iCalendar;
   selectedEventType = 1;
@@ -231,6 +216,16 @@ class TicketSoftCalendar {
       const minuteHeight = column.clientHeight / (24 * 60);
       el.style.height = `${minuteHeight * minutes}px`;
       column.appendChild(el);
+      el.addEventListener("click", () => {
+        this.openModal({
+          el,
+          activity_id,
+          guide_id,
+          room_id,
+          type_id,
+          event
+        });
+      });
     }
     // const entries = Object.entries(
     //   this.eventsGroupByType[this.selectedEventType].options
@@ -255,14 +250,14 @@ class TicketSoftCalendar {
 
   render = () => {
     const calendarEl = document.getElementById("calendar");
-    this.calendar = new Calendar(calendarEl, {
+    this.calendar = new FullCalendar.Calendar(calendarEl, {
       eventPositioned: function (info) { },
       nowIndicator: true,
       dir: "rtl",
       locale: "he",
       header: false,
       events: this.events,
-      plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
+      plugins: ['dayGrid', 'timeGrid', 'list', 'interaction'],
       timeZone: "local",
       defaultView: "dayGridMonth",
       businessHours: {
@@ -338,10 +333,9 @@ class TicketSoftCalendar {
           }
         }
       },
-      eventClick: event => {
-        console.log('eventClick');
-        this.openModal(event);
-      },
+      // eventClick: event => {
+      //   this.openModal(event);
+      // },
       dateClick: info => {
         if ("dayGridMonth" === this.calendar.view.type) {
           this.calendar.changeView("timeGridWeek", info.dateStr);
@@ -387,7 +381,6 @@ class TicketSoftCalendar {
         if (this.calendar.view.type !== "timeGridDay") {
           return;
         }
-        console.log(event);
         const classes = [
           `activity_id_${event.extendedProps.activity_id}`,
           `guide_id_${event.extendedProps.guide_id}`,
@@ -509,53 +502,12 @@ class TicketSoftCalendar {
     }
 
     document.querySelector(".fc-right").appendChild(select);
-    // const filterEventsElm = document.getElementById("filterEvents");
-    // const todayElm = document.getElementById("today");
-    // const nextElm = document.getElementById("next");
-    // const prevElm = document.getElementById("prev");
-    // const dayGridMonthElm = document.getElementById("dayGridMonth");
-    // const timeGridWeekElm = document.getElementById("timeGridWeek");
-    // const timeGridDayElm = document.getElementById("timeGridDay");
 
-    // todayElm.addEventListener("click", () => {
-    //   this.calendar.today();
-    // });
-
-    // nextElm.addEventListener("click", () => {
-    //   this.calendar.next();
-    // });
-
-    // prevElm.addEventListener("click", () => {
-    //   this.calendar.prev();
-    // });
-
-    // dayGridMonthElm.addEventListener("click", () => {
-    //   this.calendar.changeView("dayGridMonth");
-    // });
-
-    // timeGridWeekElm.addEventListener("click", () => {
-    //   this.calendar.changeView("timeGridWeek");
-    // });
-
-    // timeGridDayElm.addEventListener("click", () => {
-    //   this.calendar.changeView("timeGridDay");
-    // });
   };
 }
 
 document.addEventListener("DOMContentLoaded", function () {
   const iTicketSoftCalendar = new TicketSoftCalendar();
 
-  //iTicketSoftCalendar.updateEvents(generateData());
-  // setTimeout(() => {
-  //   var eventSources = calendar.getEventSources();
-  //   eventSources.every(eventSource => eventSource.remove());
-  //   setTimeout(() => {
-  //     calendar.addEvent({
-  //       title: "event 11",
-  //       start: "2020-01-13 10:10:00",
-  //       end: "2020-01-13 18:45:00"
-  //     });
-  //   }, 2000);
-  // }, 4000);
+
 });
