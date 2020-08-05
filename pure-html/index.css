@@ -8,7 +8,7 @@ body {
   z-index: -1;
   transition: opacity 400ms;
   background: #000000b8;
-  position: absolute;
+  position: fixed;
   width: 100%;
   height: 100%;
   top: 0;

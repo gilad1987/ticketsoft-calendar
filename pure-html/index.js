@@ -1,6 +1,8 @@
 class TicketSoftCalendar {
   iCalendar;
+  modalIsOpen = false;
   selectedEventType = 1;
+  currentFilter = '';
 
   events = [];
   eventsGroupByType = {
@@ -58,7 +60,37 @@ class TicketSoftCalendar {
     // this.appendFilterSelectButton();
     this.attachEventCloseModalButton();
     this.generateData();
-    this.filterEvents(1, 'All')
+    this.filterEvents(1, 'All');
+    this.attachNexPrevEvents();
+  }
+
+  attachNexPrevEvents = () => {
+    document.addEventListener('click', (event) => {
+      this.checkRenderDatePicker(event);
+
+      const b = event.target.closest('button');
+
+      if (!b) return;
+
+      if (b.className.includes('prev') || b.className.includes('next')) {
+        if (this.currentFilter.length > 0) {
+          this.fireClickByFilter(this.currentFilter);
+        }
+      }
+    })
+  }
+
+  checkRenderDatePicker = (event) => {
+    if (event.target.classList.contains('fc-datepicker-button')) return;
+
+    setTimeout(this.renderDatePicker, 0)
+  }
+  fireClickByFilter = (className) => {
+    if (className.length === 0) return
+    const button = document.querySelector(`.${className}`);
+    if (button) {
+      button.click();
+    }
   }
   updateEvents = events => {
     this.events = events;
@@ -93,7 +125,11 @@ class TicketSoftCalendar {
   };
 
   renderDatePicker = () => {
-    const picker = new Pikaday({
+    if (this.picker) {
+      this.picker.destroy();
+    }
+
+    this.picker = new Pikaday({
       field: document.querySelector(".fc-datepicker-button"),
       format: "yy-mm-dd",
       onSelect: dateString => {
@@ -132,6 +168,7 @@ class TicketSoftCalendar {
   };
 
   openModal = event => {
+
     const modalElm = document.getElementById("modal");
     modalElm.classList.add("open");
   };
@@ -217,6 +254,7 @@ class TicketSoftCalendar {
       el.style.height = `${minuteHeight * minutes}px`;
       column.appendChild(el);
       el.addEventListener("click", () => {
+        this.modalIsOpen = true;
         this.openModal({
           el,
           activity_id,
@@ -261,6 +299,7 @@ class TicketSoftCalendar {
       timeZone: "local",
       defaultView: "dayGridMonth",
       businessHours: {
+        daysOfWeek: [1, 2,],
         startTime: "10:00",
         endTime: "18:00"
       },
@@ -284,6 +323,7 @@ class TicketSoftCalendar {
         activitySelect: {
           text: "פעילות",
           click: event => {
+            this.currentFilter = 'fc-activitySelect-button';
             this.clearTypeFilterButtonsSelection();
             this.setSelectedFilterTypeButton(event.target);
             this.selectedEventType = 1;
@@ -295,6 +335,7 @@ class TicketSoftCalendar {
         guideSelect: {
           text: "מדריכים",
           click: event => {
+            this.currentFilter = 'fc-guideSelect-button';
             this.clearTypeFilterButtonsSelection();
             this.setSelectedFilterTypeButton(event.target);
             this.selectedEventType = 3;
@@ -306,6 +347,7 @@ class TicketSoftCalendar {
         roomSelect: {
           text: "חללים",
           click: event => {
+            this.currentFilter = 'fc-roomSelect-button';
             this.clearTypeFilterButtonsSelection();
             this.setSelectedFilterTypeButton(event.target);
             this.selectedEventType = 2;
@@ -336,19 +378,33 @@ class TicketSoftCalendar {
       // eventClick: event => {
       //   this.openModal(event);
       // },
+
       dateClick: info => {
+
+        if (!this.modalIsOpen && "timeGridDay" === this.calendar.view.type) {
+          this.openModal(info);
+        }
+
         if ("dayGridMonth" === this.calendar.view.type) {
-          this.calendar.changeView("timeGridWeek", info.dateStr);
+          this.calendar.changeView("timeGridDay", info.dateStr);
           this.calendar.gotoDate(info.dateStr);
-          return;
+          this.fireClickByFilter(this.currentFilter);
+
+          return
         }
 
         if ("timeGridWeek" === this.calendar.view.type) {
           this.calendar.changeView("timeGridDay", info.dateStr);
           this.calendar.gotoDate(info.dateStr);
-          return;
+          this.fireClickByFilter(this.currentFilter)
+
+          return
         }
+
+
+
       },
+
       select: info => { },
       dayRender: dayRenderInfo => {
         this.dayRender(dayRenderInfo);
@@ -403,6 +459,7 @@ class TicketSoftCalendar {
     const closeModalButtonElm = document.getElementById("close-modal-button");
     closeModalButtonElm.addEventListener("click", () => {
       modal.classList.remove("open");
+      this.modalIsOpen = false;
     });
   };
 
@@ -422,7 +479,7 @@ class TicketSoftCalendar {
 
     for (let i = 0; i < countEventToGenerate; i++) {
       let start = moment(
-        randomDate(new Date(2020, 3, 1), new Date(2020, 4, 30))
+        randomDate(new Date(2020, 7, 1), new Date(2020, 10, 30))
       ).hours(randomNumber(8, 12));
       let end = moment(start).add(randomNumber(1, 4), "hours");
 
